@@ -113,6 +113,6 @@ RESOURCES += \
 DISTFILES += \
     kernel/stddev.cl
 
-macx: LIBS += -framework OpenCL
-else:unix|win32: LIBS += -lOpenCL
-exists(EDT_include/edtinc.h): unix:!macx: LIBS += -L$$PWD/lib -lm -lpdv -ldl
+macx: LIBS += -framework OpenCL -lfftw3 -lm
+else:unix|win32: LIBS += -lOpenCL -lfftw3 -lm
+exists(EDT_include/edtinc.h): unix:!macx: LIBS += -L$$PWD/lib -lpdv -ldl

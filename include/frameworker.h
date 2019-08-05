@@ -18,6 +18,7 @@
 #include "cameramodel.h"
 #include "envicamera.h"
 #include "xiocamera.h"
+#include "fft_widget.h"
 
 #ifndef EDT_INDEPENDENT
     #if !(__APPLE__||__MACH__)
@@ -38,6 +39,8 @@ class LVFrameBuffer;
 
 using namespace std::chrono;
 
+#include <fftw3.h>
+
 class FrameWorker : public QObject
 {
     Q_OBJECT
@@ -47,8 +50,15 @@ public:
     ~FrameWorker();
     void stop();
     bool running();
+    double* getTapProfile(int n);
+    int getNumTaps();
+    double getRawPixel(uint32_t index);
+    fftw_complex* getFFTColProfile();
+    fftw_complex* getFFTTapProfile(int n);
 
     CameraModel *Camera;
+
+    fft_widget ft;
 
     void resetDir(const char *dirname);
 
@@ -110,6 +120,7 @@ public slots:
     void applyMask(const QString &fileName);
     void setStdDevN(int new_N);
     void setFramePeriod(double period);
+    void update_FFT_range(FFT_t type, int tapNum = 0);
 
 private:
     QThread *thread;

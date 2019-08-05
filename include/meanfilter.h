@@ -10,6 +10,8 @@
 #include "lvframe.h"
 #include "sliding_dft.h"
 
+enum FFT_t {FRAME_MEAN, COL_PROFILE, TAP_PROFILE};
+
 class MeanFilter
 {
 public:

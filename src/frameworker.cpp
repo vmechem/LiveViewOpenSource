@@ -1,5 +1,6 @@
 #include "frameworker.h"
 #include "unistd.h"
+#include "constants.h"
 
 class LVFrameBuffer
 {
@@ -11,6 +12,7 @@ public:
             auto pFrame = new LVFrame(frame_width, frame_height);
             frame_vec.push_back(pFrame);
         }
+        //this->ft = fft_widget
     }
     ~LVFrameBuffer()
     {
@@ -169,6 +171,50 @@ void FrameWorker::stop()
 bool FrameWorker::running()
 {
     return isRunning;
+}
+
+double* FrameWorker::getTapProfile(int n)
+{
+    if (n >= getNumTaps())
+    {
+        throw std::invalid_argument("Tap unavailable");
+    }
+    int max = std::min(getFrameWidth() - TAP_WIDTH * n, TAP_WIDTH);
+    double* tap_profile[max * getFrameHeight()];
+    for (int r = 0; r < max; r++)
+    {
+        for (int c = 0; c < getFrameHeight(); c++)
+        {
+            *tap_profile[r * max + c] = getRawPixel(static_cast<uint32_t>(getFrameWidth()*r + TAP_WIDTH * n + c));
+        }
+    }
+    return *tap_profile;
+}
+
+int FrameWorker::getNumTaps()
+{
+    int w = getFrameWidth();
+    return (w / TAP_WIDTH) + (w % TAP_WIDTH > 0);
+
+}
+
+double FrameWorker::getRawPixel(uint32_t index)
+{
+    return double(lvframe_buffer->current()->raw_data[index]);
+}
+
+fftw_complex* FrameWorker::getFFTColProfile()
+{
+    float* temp = getSpectralMean();
+    //need to make this a double* array
+
+
+}
+
+fftw_complex* FrameWorker::getFFTTapProfile(int n)
+{
+    double* temp = getTapProfile(n);
+    return ft->getFFT(temp);
 }
 
 void FrameWorker::setPlotMode(LV::PlotMode pm)
@@ -595,6 +641,20 @@ void FrameWorker::compute_snr(LVFrame *new_frame)
 
 void FrameWorker::setFramePeriod(double period) {
     frame_period_ms = period;
+}
+
+void update_FFT_range(FFT_t type, int tapNum)
+{
+    switch(type)
+    {
+    case FRAME_MEAN:
+
+        break;
+    case COL_PROFILE:
+        break;
+    case TAP_PROFILE:
+        break;
+    }
 }
 
 double FrameWorker::getFramePeriod() {

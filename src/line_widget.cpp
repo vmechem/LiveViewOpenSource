@@ -37,6 +37,28 @@ line_widget::line_widget(FrameWorker *fw, image_t image_t, QWidget *parent) :
         qcp->xAxis->setLabel("Spectral index");
         p_getLine = &line_widget::getSpectralLine;
         break;
+        /*
+    case TAP_PROFILE_1:
+        xAxisMax = static_cast<int>(frHeight);
+        qcp->xAxis->setLabel("Tap Profile 1");
+        p_getLine = &line_widget::getTapProfile1;
+        break;
+    case TAP_PROFILE_2:
+        xAxisMax = static_cast<int>(frHeight);
+        qcp->xAxis->setLabel("Tap Profile 2");
+        p_getLine = &line_widget::getTapProfile2;
+        break;
+    case TAP_PROFILE_3:
+        xAxisMax = static_cast<int>(frHeight);
+        qcp->xAxis->setLabel("Tap Profile 3");
+        p_getLine = &line_widget::getTapProfile3;
+        break;
+    case TAP_PROFILE_4:
+        xAxisMax = static_cast<int>(frHeight);
+        qcp->xAxis->setLabel("Tap Profile 4");
+        p_getLine = &line_widget::getTapProfile4;
+        break;
+        */
     default:
         xAxisMax = static_cast<int>(frHeight);
         qcp->xAxis->setLabel("Spectral index");
@@ -163,6 +185,54 @@ QVector<double> line_widget::getSpatialMean(QPointF coord)
     return graphData;
 }
 
+
+//What are these functions doing?
+/*
+QVector<double> line_widget::getTapProfile1(QPointF coord)
+{
+    Q_UNUSED(coord);
+    QVector<double> graphData(static_cast<int>(frWidth));
+    float *mean_data = frame_handler->getTapProfile1();
+    for (int c = 0; c < frWidth; c++) {
+        graphData[c] = static_cast<double>(mean_data[c]);
+    }
+    return graphData;
+}
+
+QVector<double> line_widget::getTapProfile2(QPointF coord)
+{
+    Q_UNUSED(coord);
+    QVector<double> graphData(static_cast<int>(frWidth));
+    float *mean_data = frame_handler->getTapProfile2();
+    for (int c = 0; c < frWidth; c++) {
+        graphData[c] = static_cast<double>(mean_data[c]);
+    }
+    return graphData;
+}
+
+QVector<double> line_widget::getTapProfile3(QPointF coord)
+{
+    Q_UNUSED(coord);
+    QVector<double> graphData(static_cast<int>(frWidth));
+    float *mean_data = frame_handler->getTapProfile3();
+    for (int c = 0; c < frWidth; c++) {
+        graphData[c] = static_cast<double>(mean_data[c]);
+    }
+    return graphData;
+}
+
+QVector<double> line_widget::getTapProfile4(QPointF coord)
+{
+    Q_UNUSED(coord);
+    QVector<double> graphData(static_cast<int>(frWidth));
+    float *mean_data = frame_handler->getTapProfile4();
+    for (int c = 0; c < frWidth; c++) {
+        graphData[c] = static_cast<double>(mean_data[c]);
+    }
+    return graphData;
+}
+*/
+
 void line_widget::handleNewFrame()
 {
     if (!this->isHidden() && frame_handler->running()) {
@@ -194,6 +264,7 @@ void line_widget::lineScrolledY(const QCPRange &newRange)
     setCeiling(qcp->yAxis->range().upper);
 }
 
+//Do tap profiles need to be included here?
 void line_widget::updatePlotTitle(const QPointF &coord)
 {
     switch(image_type) {

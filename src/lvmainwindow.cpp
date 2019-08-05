@@ -433,7 +433,6 @@ void LVMainWindow::dragEnterEvent(QDragEnterEvent *event)
 
 void LVMainWindow::dropEvent(QDropEvent *event)
 {
-
     QFileInfo f;
     foreach(const QUrl &url, event->mimeData()->urls())
     {
@@ -441,4 +440,3 @@ void LVMainWindow::dropEvent(QDropEvent *event)
             fw->resetDir(filename.toLatin1().data());
     }
 }
-

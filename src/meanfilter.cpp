@@ -37,6 +37,11 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
     for (c = 0; c < frWidth; c++) {
         frame->spatial_mean[c] = 0;
     }
+    /*
+    for (int i = 0; i < TAP_WIDTH * frHeight; i++)
+    {
+        frame->tap_profile[i]=0;
+    }
 
     for (r = 0; r < frHeight; r++) {
         for (c = 0; c < frWidth; c++) {
@@ -46,6 +51,22 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
             }
             if (r > int(topLeft.y()) && r <= int(bottomRight.y())) {
                 frame->spatial_mean[c] += data_point;
+                if( r < TAP_WIDTH)
+                {
+                    frame->tap_profile1[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
+                }
+                else if (r >= TAP_WIDTH && r < 2 * TAP_WIDTH)
+                {
+                    frame->tap_profile2[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
+                }
+                else if (r >= 2 * TAP_WIDTH && r < 3 * TAP_WIDTH)
+                {
+                    frame->tap_profile3[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
+                }
+                else if (r >= 3 * TAP_WIDTH)
+                {
+                    frame->tap_profile4[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
+                }
             }
             frame_mean += data_point;
         }
@@ -60,6 +81,7 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
             frame->frame_fft[k] = 0.0f;
         }
     }
+    */
 
     for (r = 0; r < frHeight; r++) {
         frame->spectral_mean[r] /= nSamps;

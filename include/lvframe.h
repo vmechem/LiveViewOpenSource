@@ -5,11 +5,14 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
+#include <fftw3.h>
 
 #include <QtGlobal>
 #include <QDebug>
 
 #include "constants.h"
+#include "frameworker.h"
+
 
 struct LVFrame
 {
@@ -21,6 +24,7 @@ struct LVFrame
     float *spectral_mean;
     float *spatial_mean;
     float *frame_fft;
+    fftw_complex* tap_profile;
     const int frSize;
 
     LVFrame(const int frame_width, const int frame_height) : frSize(frame_width * frame_height)
@@ -33,6 +37,8 @@ struct LVFrame
             hist_data = new uint32_t[NUMBER_OF_BINS];
             spectral_mean = new float[frame_height];
             spatial_mean = new float[frame_width];
+            //tap_profile = new double[TAP_WIDTH*frame_height];
+            //tap_profile = FrameWorker->getFFTTapProfile(1);
             frame_fft = new float[MAX_FFT_SIZE];
         } catch (std::bad_alloc&) {
             qFatal("Not enough memory to allocate frame buffer.");
@@ -56,6 +62,7 @@ struct LVFrame
         delete hist_data;
         delete spectral_mean;
         delete spatial_mean;
+      //  delete tap_profile;
         delete frame_fft;
     }
 
