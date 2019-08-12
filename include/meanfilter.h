@@ -20,6 +20,11 @@ public:
 
     void compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRight,
                       LV::PlotMode pm, bool cam_running);
+    void getFFTMagnitude(/*LVFrame *frame,*/ FFT_t profileType, int numTap = -1);
+    fftw_complex* getFFT(double* arr);
+    void updateFFTMagnitude(fftw_complex* fft);
+    double* getTapProfile(int n);
+    int getNumTaps();
     bool dftReady();
 
 private:

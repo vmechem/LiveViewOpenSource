@@ -37,36 +37,20 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
     for (c = 0; c < frWidth; c++) {
         frame->spatial_mean[c] = 0;
     }
-    /*
-    for (int i = 0; i < TAP_WIDTH * frHeight; i++)
-    {
-        frame->tap_profile[i]=0;
-    }
 
-    for (r = 0; r < frHeight; r++) {
-        for (c = 0; c < frWidth; c++) {
+
+    for (r = 0; r < frHeight; r++)
+    {
+        for (c = 0; c < frWidth; c++)
+        {
             data_point = (this->*p_getPixel)(static_cast<uint32_t>(r * frWidth + c));
-            if (c > int(topLeft.x()) && c <= int(bottomRight.x())) {
+            if (c > int(topLeft.x()) && c <= int(bottomRight.x()))
+            {
                 frame->spectral_mean[r] += data_point;
             }
-            if (r > int(topLeft.y()) && r <= int(bottomRight.y())) {
+            if (r > int(topLeft.y()) && r <= int(bottomRight.y()))
+            {
                 frame->spatial_mean[c] += data_point;
-                if( r < TAP_WIDTH)
-                {
-                    frame->tap_profile1[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
-                }
-                else if (r >= TAP_WIDTH && r < 2 * TAP_WIDTH)
-                {
-                    frame->tap_profile2[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
-                }
-                else if (r >= 2 * TAP_WIDTH && r < 3 * TAP_WIDTH)
-                {
-                    frame->tap_profile3[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
-                }
-                else if (r >= 3 * TAP_WIDTH)
-                {
-                    frame->tap_profile4[r * TAP_WIDTH + c % TAP_WIDTH] = data_point;
-                }
             }
             frame_mean += data_point;
         }
@@ -81,7 +65,6 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
             frame->frame_fft[k] = 0.0f;
         }
     }
-    */
 
     for (r = 0; r < frHeight; r++) {
         frame->spectral_mean[r] /= nSamps;
@@ -90,6 +73,94 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
     for (c = 0; c < frWidth; c++) {
         frame->spatial_mean[c] /= nBands;
     }
+}
+
+//Given frame, profileType and numTap creates double* array containing the data depending on profile type
+//Then passes it to getFFT to get the fftw_complex* format and then give it to updateFFTMagnitude
+void MeanFilter::getFFTMagnitude(/*LVFrame *frame,*/ FFT_t profileType, int numTap)
+{
+    if(profileType == FRAME_MEAN)
+    {
+        //dft_ready_read = dft.update(frame_mean);
+        //frame->frame_fft
+        //dft_ready_read = dft.get(frame_mean);
+
+    }
+    else if (profileType == COL_PROFILE)
+    {
+        double* arr[frHeight];
+        for(unsigned i = 0; i < sizeof(arr); i++)
+        {
+            *arr[i] = (double)curFrame->spectral_mean[i];
+        }
+        fftw_complex* temp = getFFT(*arr);
+        updateFFTMagnitude(temp);
+
+    }
+    else if (profileType == TAP_PROFILE)
+    {
+        double* arr = getTapProfile(numTap);
+        fftw_complex* temp = getFFT(arr);
+        updateFFTMagnitude(temp);
+    }
+}
+
+fftw_complex* MeanFilter::getFFT(double* arr)
+{
+    fftw_complex in[sizeof(arr)], *out;
+    fftw_plan p;
+    int N = sizeof(arr);
+    for (int i = 0 ; i < (int) sizeof(arr); i++)
+    {
+        in[i][0] = arr[i];
+        in[i][1] = 0;
+    }
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(p);
+    fftw_destroy_plan(p);
+    fftw_free(in);
+    fftw_free(out);
+    fftw_cleanup();
+    //qDebug() << "out1 = " << out[1];
+    return out;
+}
+
+//Given the fftw_complex calculate the magnitude of fft and stores it into frame->fftdata so fft_widget can access the
+//fftdata and create graph
+void MeanFilter::updateFFTMagnitude(fftw_complex* fft)
+{
+    for (unsigned i = 0; i < sizeof (fft); i++)
+    {
+        double mag = sqrt(fft[i][0]*fft[i][0] + fft[i][1]*fft[i][1]);
+        curFrame->frame_fft[i] = mag;
+    }
+
+}
+
+
+double* MeanFilter::getTapProfile(int n)
+{
+    if (n >= getNumTaps())
+    {
+        throw std::invalid_argument("Tap unavailable");
+    }
+    int max = std::min(frWidth - TAP_WIDTH * n, TAP_WIDTH);
+    double* tap_profile[max * frHeight];
+    for (int r = 0; r < max; r++)
+    {
+        for (int c = 0; c < frHeight; c++)
+        {
+            *tap_profile[r * max + c] = getRawPixel(static_cast<uint32_t>(frWidth*r + TAP_WIDTH * n + c));
+        }
+    }
+    return *tap_profile;
+}
+
+int MeanFilter::getNumTaps()
+{
+    int w = frWidth;
+    return (w / TAP_WIDTH) + (w % TAP_WIDTH > 0);
 }
 
 float MeanFilter::getRawPixel(uint32_t index)
