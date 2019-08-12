@@ -20,7 +20,6 @@
 #include "cameramodel.h"
 #include "envicamera.h"
 #include "xiocamera.h"
-#include "fft_widget.h"
 
 #ifdef USE_EDT
 #include "clcamera.h"
@@ -50,15 +49,9 @@ public:
     bool running();
     double getRawPixel(uint32_t index);
     FFT_t getFFTType();
-    void changeFFTType(FFT_t t);
-    int getTapNum();
     int getNumTaps();
 
     CameraModel *Camera;
-
-    //fft_widget ft;
-
-    //MeanFilter mfilter;
 
     void resetDir(const char *dirname);
 
@@ -75,6 +68,7 @@ public:
     float* getSpectralMean();
     float* getSpatialMean();
     float* getFrameFFT();
+
 
     void saveFrames(save_req_t req);
 
@@ -120,7 +114,7 @@ public slots:
     void applyMask(const QString &fileName);
     void setStdDevN(int new_N);
     void setFramePeriod(double period);
-    void update_FFT_range(FFT_t type, int tapNum = 0);
+    void update_FFT_range(FFT_t type, int tapNum = -1);
     void tapPrfChanged(int tapNum);
 
 private:
@@ -141,8 +135,6 @@ private:
     int frWidth, frHeight, dataHeight;
     size_t frSize;
     camera_t cam_type;
-    FFT_t FFTtype;
-    int curTapNum;
 
     uint32_t stddev_N; // controls standard deviation history window
 

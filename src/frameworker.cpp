@@ -176,17 +176,7 @@ double FrameWorker::getRawPixel(uint32_t index)
 
 FFT_t FrameWorker::getFFTType()
 {
-    return FFTtype;
-}
-
-void FrameWorker::changeFFTType(FFT_t t)
-{
-    FFTtype = t;
-}
-
-int FrameWorker::getTapNum()
-{
-    return curTapNum;
+    return MEFilter->getFFTType();
 }
 
 int FrameWorker::getNumTaps()
@@ -623,13 +613,13 @@ void FrameWorker::setFramePeriod(double period) {
 
 void FrameWorker::update_FFT_range(FFT_t type, int tapNum)
 {
-    changeFFTType(type);
-    MEFilter->getFFTMagnitude(type, tapNum);
+    MEFilter->changeFFTType(type, tapNum);
 }
 
 void FrameWorker::tapPrfChanged(int tapNum)
 {
-    curTapNum = tapNum;
+    FFT_t curType = MEFilter->getFFTType();
+    MEFilter->changeFFTType(curType, tapNum);
 }
 
 double FrameWorker::getFramePeriod() {

@@ -2,10 +2,7 @@
 #define FFT_WIDGET_H
 
 #include <QVector>
-#include <QSpinBox>
-#include <fftw3.h>
 
-#include "qcustomplot.h"
 #include "lvtabapplication.h"
 
 class fft_widget : public LVTabApplication
@@ -24,7 +21,7 @@ public slots:
     void handleNewFrame();
     void barsScrolledY(const QCPRange &newRange);
     void rescaleRange();
-    fftw_complex* getFFT(double* arr);
+    // fftw_complex* getFFT(double* arr);
     void updateFFT();
 
 

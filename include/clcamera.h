@@ -1,7 +1,6 @@
 #ifndef EDTCAMERA_H
 #define EDTCAMERA_H
 
-
 #include <cstring>
 #include <mutex>
 

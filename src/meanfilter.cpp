@@ -12,7 +12,8 @@ MeanFilter::~MeanFilter()
 void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRight,
                               LV::PlotMode pm, bool cam_running)
 {
-    int r, c, k;
+    //int r, c, k;
+    int r, c;
     double nSamps = bottomRight.x() - topLeft.x();
     double nBands = bottomRight.y() - topLeft.y();
     float frame_mean = 0.0;
@@ -57,6 +58,7 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
     }
     frame_mean /= (frWidth * frHeight);
 
+/*
     dft_ready_read = dft.update(frame_mean);
     if (dft_ready_read && cam_running) {
         dft.get(frame->frame_fft);
@@ -64,7 +66,7 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
         for (k = 0; k < FFT_INPUT_LENGTH; k++) {
             frame->frame_fft[k] = 0.0f;
         }
-    }
+    }*/
 
     for (r = 0; r < frHeight; r++) {
         frame->spectral_mean[r] /= nSamps;
@@ -73,35 +75,47 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
     for (c = 0; c < frWidth; c++) {
         frame->spatial_mean[c] /= nBands;
     }
+
+    getFFTMagnitude(frame, frame_mean, cam_running);
 }
 
-//Given frame, profileType and numTap creates double* array containing the data depending on profile type
-//Then passes it to getFFT to get the fftw_complex* format and then give it to updateFFTMagnitude
-void MeanFilter::getFFTMagnitude(/*LVFrame *frame,*/ FFT_t profileType, int numTap)
+void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean, bool cam_running)
 {
-    if(profileType == FRAME_MEAN)
+    if(getFFTType() == FRAME_MEAN)
     {
-        //dft_ready_read = dft.update(frame_mean);
-        //frame->frame_fft
-        //dft_ready_read = dft.get(frame_mean);
-
+        dft_ready_read = dft.update(mean);
+        dft.get(frame->frame_mean_fft);
+        if(dft_ready_read && cam_running)
+        {
+            for(unsigned i = 0; i < sizeof(dft.dft); i++)
+            {
+                frame->frame_fft[i] = sqrt(dft.dft[i].real() * dft.dft[i].real() + dft.dft[i].imag() * dft.dft[i].imag());
+            }
+        }
+        else
+        {
+            for (int k = 0; k <FFT_INPUT_LENGTH; k++)
+            {
+                frame->frame_fft[k] = 0.0f;
+            }
+        }
     }
-    else if (profileType == COL_PROFILE)
+    else if (getFFTType() == COL_PROFILE)
     {
         double* arr[frHeight];
         for(unsigned i = 0; i < sizeof(arr); i++)
         {
-            *arr[i] = (double)curFrame->spectral_mean[i];
+            *arr[i] = (double)frame->spectral_mean[i];
         }
         fftw_complex* temp = getFFT(*arr);
-        updateFFTMagnitude(temp);
+        updateFFTMagnitude(frame, temp);
 
     }
-    else if (profileType == TAP_PROFILE)
+    else if (getFFTType() == TAP_PROFILE)
     {
-        double* arr = getTapProfile(numTap);
+        double* arr = getTapProfile(getTapNum());
         fftw_complex* temp = getFFT(arr);
-        updateFFTMagnitude(temp);
+        updateFFTMagnitude(frame, temp);
     }
 }
 
@@ -128,12 +142,12 @@ fftw_complex* MeanFilter::getFFT(double* arr)
 
 //Given the fftw_complex calculate the magnitude of fft and stores it into frame->fftdata so fft_widget can access the
 //fftdata and create graph
-void MeanFilter::updateFFTMagnitude(fftw_complex* fft)
+void MeanFilter::updateFFTMagnitude(LVFrame *frame, fftw_complex* fft)
 {
     for (unsigned i = 0; i < sizeof (fft); i++)
     {
         double mag = sqrt(fft[i][0]*fft[i][0] + fft[i][1]*fft[i][1]);
-        curFrame->frame_fft[i] = mag;
+        frame->frame_fft[i] = mag;
     }
 
 }
@@ -161,6 +175,22 @@ int MeanFilter::getNumTaps()
 {
     int w = frWidth;
     return (w / TAP_WIDTH) + (w % TAP_WIDTH > 0);
+}
+
+FFT_t MeanFilter::getFFTType()
+{
+    return fft_type;
+}
+
+void MeanFilter::changeFFTType(FFT_t type, int x)
+{
+    fft_type = type;
+    tapNum = x;
+}
+
+int MeanFilter::getTapNum()
+{
+    return tapNum;
 }
 
 float MeanFilter::getRawPixel(uint32_t index)

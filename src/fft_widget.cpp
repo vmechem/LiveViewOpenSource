@@ -5,7 +5,6 @@
 fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     LVTabApplication(fw, parent)
 {
-    this->fw = fw;
 
     DCMaskBox = new QCheckBox(QString("Mask DC component"), this);
     DCMaskBox->setChecked(true);
@@ -94,7 +93,7 @@ void fft_widget::handleNewFrame()
 
         double nyquist_freq = framerate / 2.0;
 
-        switch(fw->getFFTType()){
+        switch(frame_handler->getFFTType()){
         case FRAME_MEAN:
             nyquist_freq = framerate / 2.0;
             break;
@@ -139,10 +138,10 @@ void fft_widget::rescaleRange()
 void fft_widget::updateFFT()
 {
     if(plMeanButton->isChecked())
-        fw->update_FFT_range(FRAME_MEAN);
+        frame_handler->update_FFT_range(FRAME_MEAN);
     else if(vCrossButton->isChecked())
-        fw->update_FFT_range(COL_PROFILE);
+        frame_handler->update_FFT_range(COL_PROFILE);
     else if(tapPrfButton->isChecked())
-        fw->update_FFT_range(TAP_PROFILE, tapToProfile.value());
+        frame_handler->update_FFT_range(TAP_PROFILE, tapToProfile.value());
 
 }
