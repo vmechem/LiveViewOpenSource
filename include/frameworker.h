@@ -4,6 +4,8 @@
 #include <chrono>
 #include <queue>
 
+#include <fftw3.h>
+
 #include <QMessageBox>
 #include <QPointF>
 #include <QTime>
@@ -20,10 +22,8 @@
 #include "xiocamera.h"
 #include "fft_widget.h"
 
-#ifndef EDT_INDEPENDENT
-    #if !(__APPLE__||__MACH__)
-        #include "clcamera.h"
-    #endif
+#ifdef USE_EDT
+#include "clcamera.h"
 #endif
 
 #include "twoscomplimentfilter.h"
@@ -39,8 +39,6 @@ class LVFrameBuffer;
 
 using namespace std::chrono;
 
-#include <fftw3.h>
-
 class FrameWorker : public QObject
 {
     Q_OBJECT
@@ -50,15 +48,17 @@ public:
     ~FrameWorker();
     void stop();
     bool running();
-    double* getTapProfile(int n);
-    int getNumTaps();
     double getRawPixel(uint32_t index);
-    fftw_complex* getFFTColProfile();
-    fftw_complex* getFFTTapProfile(int n);
+    FFT_t getFFTType();
+    void changeFFTType(FFT_t t);
+    int getTapNum();
+    int getNumTaps();
 
     CameraModel *Camera;
 
-    fft_widget ft;
+    //fft_widget ft;
+
+    //MeanFilter mfilter;
 
     void resetDir(const char *dirname);
 
@@ -121,6 +121,7 @@ public slots:
     void setStdDevN(int new_N);
     void setFramePeriod(double period);
     void update_FFT_range(FFT_t type, int tapNum = 0);
+    void tapPrfChanged(int tapNum);
 
 private:
     QThread *thread;
@@ -140,6 +141,8 @@ private:
     int frWidth, frHeight, dataHeight;
     size_t frSize;
     camera_t cam_type;
+    FFT_t FFTtype;
+    int curTapNum;
 
     uint32_t stddev_N; // controls standard deviation history window
 

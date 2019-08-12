@@ -87,15 +87,11 @@ FrameWorker::FrameWorker(QSettings *settings_arg, QThread *worker, QObject *pare
                                 settings->value(QString("ssd_height"), 480).toInt());
         break;
     case CAMERA_LINK:
-#ifndef EDT_INDEPENDENT
-    #if !(__APPLE__ || __MACH__)
+#ifdef USE_EDT
         Camera = new CLCamera();
         break;
-    #else
-        qFatal("Unable to use Camera Link interface on MacOS systems!");
-    #endif
 #else
-    qFatal("Unable to use Camera Link interface on MacOS systems!");
+        qFatal("Unable to use Camera Link interface on unconfigured systems!");
 #endif
     }
 
@@ -173,48 +169,30 @@ bool FrameWorker::running()
     return isRunning;
 }
 
-double* FrameWorker::getTapProfile(int n)
-{
-    if (n >= getNumTaps())
-    {
-        throw std::invalid_argument("Tap unavailable");
-    }
-    int max = std::min(getFrameWidth() - TAP_WIDTH * n, TAP_WIDTH);
-    double* tap_profile[max * getFrameHeight()];
-    for (int r = 0; r < max; r++)
-    {
-        for (int c = 0; c < getFrameHeight(); c++)
-        {
-            *tap_profile[r * max + c] = getRawPixel(static_cast<uint32_t>(getFrameWidth()*r + TAP_WIDTH * n + c));
-        }
-    }
-    return *tap_profile;
-}
-
-int FrameWorker::getNumTaps()
-{
-    int w = getFrameWidth();
-    return (w / TAP_WIDTH) + (w % TAP_WIDTH > 0);
-
-}
-
 double FrameWorker::getRawPixel(uint32_t index)
 {
     return double(lvframe_buffer->current()->raw_data[index]);
 }
 
-fftw_complex* FrameWorker::getFFTColProfile()
+FFT_t FrameWorker::getFFTType()
 {
-    float* temp = getSpectralMean();
-    //need to make this a double* array
-
-
+    return FFTtype;
 }
 
-fftw_complex* FrameWorker::getFFTTapProfile(int n)
+void FrameWorker::changeFFTType(FFT_t t)
 {
-    double* temp = getTapProfile(n);
-    return ft->getFFT(temp);
+    FFTtype = t;
+}
+
+int FrameWorker::getTapNum()
+{
+    return curTapNum;
+}
+
+int FrameWorker::getNumTaps()
+{
+    int w = frWidth;
+    return (w / TAP_WIDTH) + (w % TAP_WIDTH > 0);
 }
 
 void FrameWorker::setPlotMode(LV::PlotMode pm)
@@ -643,18 +621,15 @@ void FrameWorker::setFramePeriod(double period) {
     frame_period_ms = period;
 }
 
-void update_FFT_range(FFT_t type, int tapNum)
+void FrameWorker::update_FFT_range(FFT_t type, int tapNum)
 {
-    switch(type)
-    {
-    case FRAME_MEAN:
+    changeFFTType(type);
+    MEFilter->getFFTMagnitude(type, tapNum);
+}
 
-        break;
-    case COL_PROFILE:
-        break;
-    case TAP_PROFILE:
-        break;
-    }
+void FrameWorker::tapPrfChanged(int tapNum)
+{
+    curTapNum = tapNum;
 }
 
 double FrameWorker::getFramePeriod() {

@@ -16,19 +16,26 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     tapPrfButton = new QRadioButton("Tap Profile", this);
     tapPrfButton->setChecked(false);
 
-    qcp->xAxis->setLabel("Frequency [Hz]");
-    qcp->yAxis->setLabel("Magnitude");
-
     tapToProfile.setMinimum(0);
     tapToProfile.setMaximum(fw->getNumTaps());
     tapToProfile.setSingleStep(1);
     tapToProfile.setEnabled(false);
+
+    //The QSpinBox that allows the user to choose which tap profile to view is only displayed when tapPrfButton is checked.
     connect(tapPrfButton, SIGNAL(toggled(bool)), &tapToProfile, SLOT(setEnabled(bool)));
-    //connect(&tapToProfile, SIGNAL(valueChanged(int)), fw, SLOT(tapPrfChanged(int)));
-    //connect(tapToProfile, SIGNAL(valueChanged(int), fw, SLOT(tapPrfChanged(int))));
+    connect(&tapToProfile, SIGNAL(valueChanged(int)), fw, SLOT(tapPrfChanged(int)));
     connect(plMeanButton, SIGNAL(clicked()), this, SLOT(updateFFT()));
     connect(vCrossButton, SIGNAL(clicked()), this, SLOT(updateFFT()));
     connect(tapPrfButton, SIGNAL(clicked()), this, SLOT(updateFFT()));
+
+    //Sets the ceiling and floor of the widget
+    ceiling = 100;
+    floor = 0;
+
+    qcp = new QCustomPlot(this);
+    qcp->xAxis->setLabel("Frequency [Hz]");
+    qcp->yAxis->setLabel("Magnitude");
+
     fft_bars = new QCPBars(qcp->xAxis, qcp->yAxis);
     fft_bars->setName("Magnitude of FFT for Mean Frame Pixel Value");
 
@@ -44,6 +51,9 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     this->setLayout(qgl);
     setCeiling(100.0);
     setPrecision(true);
+
+    connect(&renderTimer, SIGNAL(timeout()),this, SLOT(handleNewFrame()));
+    renderTimer.start(FRAME_DISPLAY_PERIOD_MSECS);
 
     if (fw->settings->value(QString("dark"), USE_DARK_STYLE).toBool()) {
         fft_bars->setPen(QPen(Qt::lightGray));
@@ -77,59 +87,25 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     renderTimer.start(FRAME_DISPLAY_PERIOD_MSECS);
 }
 
-void fft_widget::handleNewFrame(FFT_t FFTtype)
+void fft_widget::handleNewFrame()
 {
     if (!this->isHidden()) {
         double framerate = frame_handler->fps > 0 ? frame_handler->fps : 1;
 
-        //Why not framerate/2?
-        double nyquist_freq =  500.0 / framerate;
+        double nyquist_freq = framerate / 2.0;
 
-        //What do all the cases mean? -> need to redefine nyquist_freq for all?
-        switch(FFTtype){
+        switch(fw->getFFTType()){
         case FRAME_MEAN:
-            //What is delta and why does nyquist frequency depend on it
-            //nyquist_freq = fw->delta / 2.0;
+            nyquist_freq = framerate / 2.0;
             break;
         case COL_PROFILE:
-            //nyquist_freq = fw->getFrameHeight() * fw->delta / 2.0;
+            nyquist_freq = frHeight * framerate / 2.0;
             break;
         case TAP_PROFILE:
-        {
-            nyquist_freq = TAP_WIDTH * frame_handler->getFrameHeight() / 2.0;
-            //Need to replace argument with actual tap number
-            double* temp = fw->getTapProfile(1);
-            fftw_complex in[sizeof(temp)], *out;
-            fftw_plan p;
-            int N = sizeof(temp);
-            for (int i = 0 ; i < (int) sizeof(temp); i++)
-            {
-                in[i][0] = temp[i];
-                in[i][1] = 0;
-            }
-            out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-            p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-            fftw_execute(p);
-            fftw_destroy_plan(p);
-            fftw_free(in);
-            fftw_free(out);
-            fftw_cleanup();
+            //what if the tap is <TAP_WIDTH
+            nyquist_freq = TAP_WIDTH * frHeight * framerate / 2.0;
             break;
         }
-            /*
-        case TAP_PROFILE_2:
-            nyquist_freq = TAP_WIDTH * frame_handler->getFrameHeight() / 2.0;
-            break;
-        case TAP_PROFILE_3:
-            nyquist_freq = TAP_WIDTH * frame_handler->getFrameHeight() / 2.0;
-            break;
-        case TAP_PROFILE_4:
-            nyquist_freq = TAP_WIDTH * frame_handler->getFrameHeight() / 2.0;
-            break;
-            */
-        }
-
-
         double increment = nyquist_freq / (FFT_INPUT_LENGTH / 2);
         fft_bars->setWidth(increment);
 
@@ -158,27 +134,6 @@ void fft_widget::barsScrolledY(const QCPRange &newRange)
 void fft_widget::rescaleRange()
 {
     qcp->yAxis->setRange(QCPRange(getFloor(), getCeiling()));
-}
-
-fftw_complex* getFFT(double* arr)
-{
-    fftw_complex in[sizeof(arr)], *out;
-    fftw_plan p;
-    int N = sizeof(arr);
-    for (int i = 0 ; i < (int) sizeof(arr); i++)
-    {
-        in[i][0] = arr[i];
-        in[i][1] = 0;
-    }
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
-    fftw_destroy_plan(p);
-    fftw_free(in);
-    fftw_free(out);
-    fftw_cleanup();
-    qDebug() << "out1 = " << out[1];
-    return out;
 }
 
 void fft_widget::updateFFT()
