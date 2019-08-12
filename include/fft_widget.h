@@ -4,7 +4,9 @@
 #include <QVector>
 #include <fftw3.h>
 
+#include "qcustomplot.h"
 #include "lvtabapplication.h"
+#include "meanfilter.h"
 
 class fft_widget : public LVTabApplication
 {
@@ -12,7 +14,6 @@ class fft_widget : public LVTabApplication
 public:
     explicit fft_widget(FrameWorker *fw, QWidget *parent = nullptr);
     ~fft_widget() = default;
-    FrameWorker *fw;
 
     QRadioButton *plMeanButton;
     QRadioButton *vCrossButton;
