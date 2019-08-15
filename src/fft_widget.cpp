@@ -1,6 +1,5 @@
 #include "fft_widget.h"
 #include <fftw3.h>
-//#include "meanfilter.h"
 
 fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     LVTabApplication(fw, parent)
@@ -10,13 +9,13 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     DCMaskBox->setChecked(true);
     plMeanButton = new QRadioButton("Plane Mean", this);
     plMeanButton->setChecked(true);
-    vCrossButton = new QRadioButton("Vertical Crosshair", this);
+    vCrossButton = new QRadioButton("Column Profile", this);
     vCrossButton->setChecked(false);
     tapPrfButton = new QRadioButton("Tap Profile", this);
     tapPrfButton->setChecked(false);
 
     tapToProfile.setMinimum(0);
-    tapToProfile.setMaximum(fw->getNumTaps());
+    tapToProfile.setMaximum(fw->getNumTaps()-1);
     tapToProfile.setSingleStep(1);
     tapToProfile.setEnabled(false);
 
@@ -47,6 +46,7 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     qgl->addWidget(plMeanButton, 8, 2, 1, 1);
     qgl->addWidget(vCrossButton, 8, 3, 1, 1);
     qgl->addWidget(tapPrfButton, 8, 4, 1, 1);
+    qgl->addWidget(&tapToProfile, 8, 5, 1, 1);
     this->setLayout(qgl);
     setCeiling(100.0);
     setPrecision(true);
@@ -101,7 +101,6 @@ void fft_widget::handleNewFrame()
             nyquist_freq = frHeight * framerate / 2.0;
             break;
         case TAP_PROFILE:
-            //what if the tap is <TAP_WIDTH
             nyquist_freq = TAP_WIDTH * frHeight * framerate / 2.0;
             break;
         }

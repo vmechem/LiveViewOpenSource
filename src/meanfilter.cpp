@@ -12,7 +12,6 @@ MeanFilter::~MeanFilter()
 void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRight,
                               LV::PlotMode pm, bool cam_running)
 {
-    //int r, c, k;
     int r, c;
     double nSamps = bottomRight.x() - topLeft.x();
     double nBands = bottomRight.y() - topLeft.y();
@@ -58,16 +57,6 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
     }
     frame_mean /= (frWidth * frHeight);
 
-/*
-    dft_ready_read = dft.update(frame_mean);
-    if (dft_ready_read && cam_running) {
-        dft.get(frame->frame_fft);
-    } else {
-        for (k = 0; k < FFT_INPUT_LENGTH; k++) {
-            frame->frame_fft[k] = 0.0f;
-        }
-    }*/
-
     for (r = 0; r < frHeight; r++) {
         frame->spectral_mean[r] /= nSamps;
     }
@@ -76,16 +65,16 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
         frame->spatial_mean[c] /= nBands;
     }
 
-    getFFTMagnitude(frame, frame_mean, cam_running);
+    getFFTMagnitude(frame, frame_mean/*, cam_running*/);
 }
 
-void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean, bool cam_running)
+void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean/*, bool cam_running*/)
 {
     if(getFFTType() == FRAME_MEAN)
     {
         dft_ready_read = dft.update(mean);
         dft.get(frame->frame_mean_fft);
-        if(dft_ready_read && cam_running)
+        if(dft_ready_read /*&& cam_running*/)
         {
             for(unsigned i = 0; i < sizeof(dft.dft); i++)
             {
@@ -102,12 +91,13 @@ void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean, bool cam_running)
     }
     else if (getFFTType() == COL_PROFILE)
     {
-        double* arr[frHeight];
+        double * arr = new double[frHeight];
         for(unsigned i = 0; i < sizeof(arr); i++)
         {
-            *arr[i] = (double)frame->spectral_mean[i];
+            arr[i] = (double)frame->spectral_mean[i];
         }
-        fftw_complex* temp = getFFT(*arr);
+        delete[] arr;
+        fftw_complex* temp = getFFT(arr);
         updateFFTMagnitude(frame, temp);
 
     }
@@ -121,22 +111,22 @@ void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean, bool cam_running)
 
 fftw_complex* MeanFilter::getFFT(double* arr)
 {
-    fftw_complex in[sizeof(arr)], *out;
-    fftw_plan p;
     int N = sizeof(arr);
+    fftw_complex *in, *out;
+    in = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * N);
+    out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * N);
+    fftw_plan p;
     for (int i = 0 ; i < (int) sizeof(arr); i++)
     {
         in[i][0] = arr[i];
         in[i][1] = 0;
     }
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
     p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_execute(p);
     fftw_destroy_plan(p);
     fftw_free(in);
     fftw_free(out);
     fftw_cleanup();
-    //qDebug() << "out1 = " << out[1];
     return out;
 }
 
@@ -149,7 +139,6 @@ void MeanFilter::updateFFTMagnitude(LVFrame *frame, fftw_complex* fft)
         double mag = sqrt(fft[i][0]*fft[i][0] + fft[i][1]*fft[i][1]);
         frame->frame_fft[i] = mag;
     }
-
 }
 
 
@@ -160,15 +149,15 @@ double* MeanFilter::getTapProfile(int n)
         throw std::invalid_argument("Tap unavailable");
     }
     int max = std::min(frWidth - TAP_WIDTH * n, TAP_WIDTH);
-    double* tap_profile[max * frHeight];
+    double * tap_profile = new double[max * frHeight];
     for (int r = 0; r < max; r++)
     {
         for (int c = 0; c < frHeight; c++)
         {
-            *tap_profile[r * max + c] = getRawPixel(static_cast<uint32_t>(frWidth*r + TAP_WIDTH * n + c));
+            tap_profile[r * max + c] = (double)getRawPixel(static_cast<uint32_t>(frWidth*r + TAP_WIDTH * n + c));
         }
     }
-    return *tap_profile;
+    return tap_profile;
 }
 
 int MeanFilter::getNumTaps()
