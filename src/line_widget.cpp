@@ -37,28 +37,6 @@ line_widget::line_widget(FrameWorker *fw, image_t image_t, QWidget *parent) :
         qcp->xAxis->setLabel("Spectral index");
         p_getLine = &line_widget::getSpectralLine;
         break;
-        /*
-    case TAP_PROFILE_1:
-        xAxisMax = static_cast<int>(frHeight);
-        qcp->xAxis->setLabel("Tap Profile 1");
-        p_getLine = &line_widget::getTapProfile1;
-        break;
-    case TAP_PROFILE_2:
-        xAxisMax = static_cast<int>(frHeight);
-        qcp->xAxis->setLabel("Tap Profile 2");
-        p_getLine = &line_widget::getTapProfile2;
-        break;
-    case TAP_PROFILE_3:
-        xAxisMax = static_cast<int>(frHeight);
-        qcp->xAxis->setLabel("Tap Profile 3");
-        p_getLine = &line_widget::getTapProfile3;
-        break;
-    case TAP_PROFILE_4:
-        xAxisMax = static_cast<int>(frHeight);
-        qcp->xAxis->setLabel("Tap Profile 4");
-        p_getLine = &line_widget::getTapProfile4;
-        break;
-        */
     default:
         xAxisMax = static_cast<int>(frHeight);
         qcp->xAxis->setLabel("Spectral index");

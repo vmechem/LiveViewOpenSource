@@ -32,12 +32,6 @@ private:
     QVector<double> getSpatialLine(QPointF coord);
     QVector<double> getSpectralMean(QPointF coord);
     QVector<double> getSpatialMean(QPointF coord);
-    /*
-    QVector<double> getTapProfile1(QPointF coord);
-    QVector<double> getTapProfile2(QPointF coord);
-    QVector<double> getTapProfile3(QPointF coord);
-    QVector<double> getTapProfile4(QPointF coord);
-    */
     QVector<double> x, y;
 
     QCPTextElement *plotTitle;
