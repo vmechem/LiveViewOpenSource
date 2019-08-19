@@ -12,7 +12,6 @@ public:
             auto pFrame = new LVFrame(frame_width, frame_height);
             frame_vec.push_back(pFrame);
         }
-        //this->ft = fft_widget
     }
     ~LVFrameBuffer()
     {
@@ -179,6 +178,7 @@ FFT_t FrameWorker::getFFTType()
     return MEFilter->getFFTType();
 }
 
+//Returns the number of taps of size 160
 int FrameWorker::getNumTaps()
 {
     int w = frWidth;
@@ -611,11 +611,13 @@ void FrameWorker::setFramePeriod(double period) {
     frame_period_ms = period;
 }
 
+//Called when the profile selected is changed via GUI elements and calls function in MeanFilter, passing necessary arguments
 void FrameWorker::update_FFT_range(FFT_t type, int tapNum)
 {
     MEFilter->changeFFTType(type, tapNum);
 }
 
+//Called when tapToProfile number is changed via GUI elements and calls function in MeanFilter, passing necessary arguments
 void FrameWorker::tapPrfChanged(int tapNum)
 {
     FFT_t curType = MEFilter->getFFTType();

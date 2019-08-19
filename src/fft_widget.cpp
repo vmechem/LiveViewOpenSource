@@ -5,6 +5,7 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     LVTabApplication(fw, parent)
 {
 
+    //Creates GUI buttons to choose which profile to view
     DCMaskBox = new QCheckBox(QString("Mask DC component"), this);
     DCMaskBox->setChecked(true);
     plMeanButton = new QRadioButton("Plane Mean", this);
@@ -14,6 +15,7 @@ fft_widget::fft_widget(FrameWorker *fw, QWidget *parent) :
     tapPrfButton = new QRadioButton("Tap Profile", this);
     tapPrfButton->setChecked(false);
 
+    //Sets the possible taps to choose from for tap profile. The number of taps are zero-indexed.
     tapToProfile.setMinimum(0);
     tapToProfile.setMaximum(fw->getNumTaps()-1);
     tapToProfile.setSingleStep(1);
@@ -134,6 +136,7 @@ void fft_widget::rescaleRange()
     qcp->yAxis->setRange(QCPRange(getFloor(), getCeiling()));
 }
 
+//Called when the selected profile is changed and calls function in frameworker to update data
 void fft_widget::updateFFT()
 {
     if(plMeanButton->isChecked())

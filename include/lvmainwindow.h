@@ -24,7 +24,6 @@
 class LVMainWindow : public QMainWindow
 {
     Q_OBJECT
-  //  setAcceptDrops(true);
 
 public:
     LVMainWindow(QSettings *settings, QWidget *parent = nullptr);

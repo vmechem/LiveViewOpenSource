@@ -65,16 +65,17 @@ void MeanFilter::compute_mean(LVFrame *frame, QPointF topLeft, QPointF bottomRig
         frame->spatial_mean[c] /= nBands;
     }
 
-    getFFTMagnitude(frame, frame_mean/*, cam_running*/);
+    getFFTMagnitude(frame, frame_mean);
 }
 
-void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean/*, bool cam_running*/)
+//Calculates the FFT of the current FFT type and stores it into frame->frame_fft to be accessed by fft_widget in creating graphical representation of data
+void MeanFilter::getFFTMagnitude(LVFrame *frame, float mean)
 {
     if(getFFTType() == FRAME_MEAN)
     {
         dft_ready_read = dft.update(mean);
         dft.get(frame->frame_mean_fft);
-        if(dft_ready_read /*&& cam_running*/)
+        if(dft_ready_read)
         {
             for(unsigned i = 0; i < sizeof(dft.dft); i++)
             {
@@ -141,7 +142,7 @@ void MeanFilter::updateFFTMagnitude(LVFrame *frame, fftw_complex* fft)
     }
 }
 
-
+//Given the zero-indexed tap number returns a double * array of RawPixel data of that tap
 double* MeanFilter::getTapProfile(int n)
 {
     if (n >= getNumTaps())
@@ -160,12 +161,14 @@ double* MeanFilter::getTapProfile(int n)
     return tap_profile;
 }
 
+//Returns the number of taps
 int MeanFilter::getNumTaps()
 {
     int w = frWidth;
     return (w / TAP_WIDTH) + (w % TAP_WIDTH > 0);
 }
 
+//Returns the current FFT type
 FFT_t MeanFilter::getFFTType()
 {
     return fft_type;
@@ -177,6 +180,7 @@ void MeanFilter::changeFFTType(FFT_t type, int x)
     tapNum = x;
 }
 
+//Returns the current tap number selected
 int MeanFilter::getTapNum()
 {
     return tapNum;

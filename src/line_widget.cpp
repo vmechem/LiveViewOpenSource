@@ -163,54 +163,6 @@ QVector<double> line_widget::getSpatialMean(QPointF coord)
     return graphData;
 }
 
-
-//What are these functions doing?
-/*
-QVector<double> line_widget::getTapProfile1(QPointF coord)
-{
-    Q_UNUSED(coord);
-    QVector<double> graphData(static_cast<int>(frWidth));
-    float *mean_data = frame_handler->getTapProfile1();
-    for (int c = 0; c < frWidth; c++) {
-        graphData[c] = static_cast<double>(mean_data[c]);
-    }
-    return graphData;
-}
-
-QVector<double> line_widget::getTapProfile2(QPointF coord)
-{
-    Q_UNUSED(coord);
-    QVector<double> graphData(static_cast<int>(frWidth));
-    float *mean_data = frame_handler->getTapProfile2();
-    for (int c = 0; c < frWidth; c++) {
-        graphData[c] = static_cast<double>(mean_data[c]);
-    }
-    return graphData;
-}
-
-QVector<double> line_widget::getTapProfile3(QPointF coord)
-{
-    Q_UNUSED(coord);
-    QVector<double> graphData(static_cast<int>(frWidth));
-    float *mean_data = frame_handler->getTapProfile3();
-    for (int c = 0; c < frWidth; c++) {
-        graphData[c] = static_cast<double>(mean_data[c]);
-    }
-    return graphData;
-}
-
-QVector<double> line_widget::getTapProfile4(QPointF coord)
-{
-    Q_UNUSED(coord);
-    QVector<double> graphData(static_cast<int>(frWidth));
-    float *mean_data = frame_handler->getTapProfile4();
-    for (int c = 0; c < frWidth; c++) {
-        graphData[c] = static_cast<double>(mean_data[c]);
-    }
-    return graphData;
-}
-*/
-
 void line_widget::handleNewFrame()
 {
     if (!this->isHidden() && frame_handler->running()) {
